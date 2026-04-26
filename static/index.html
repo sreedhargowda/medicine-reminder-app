@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💊 Medicine Reminder</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0eb;
+  --card: #ffffff;
+  --accent: #e8613c;
+  --accent2: #3c8ce8;
+  --green: #2ecc71;
+  --red: #e84b3c;
+  --text: #1a1a2e;
+  --muted: #888899;
+  --border: #e8e0d8;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: var(--text);
+  color: #fff;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+}
+
+.logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.01em;
+}
+.logo span { color: var(--accent); }
+
+.bot-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+}
+
+.status-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #555;
+  transition: background 0.3s;
+}
+.status-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+/* ── Layout ── */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  background: var(--card);
+  padding: 5px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: fit-content;
+}
+
+.tab {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab.active {
+  background: var(--text);
+  color: #fff;
+}
+.tab:hover:not(.active) { color: var(--text); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem;
+  margin-bottom: 20px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Medicine List ── */
+.medicine-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.med-item {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.15s;
+  border: 1px solid var(--border);
+}
+.med-item:hover { transform: translateY(-1px); }
+
+.med-time {
+  background: var(--text);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 56px;
+  text-align: center;
+}
+
+.med-info { flex: 1; }
+.med-name { font-weight: 600; font-size: 0.95rem; }
+.med-detail { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+.med-voice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voice-badge {
+  font-size: 0.7rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.voice-badge.none {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.med-actions { display: flex; gap: 6px; }
+
+.btn-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+.btn-edit  { background: #e3f2fd; color: var(--accent2); }
+.btn-delete{ background: #fce4ec; color: var(--red); }
+.btn-edit:hover   { background: var(--accent2); color: #fff; }
+.btn-delete:hover { background: var(--red); color: #fff; }
+
+/* ── Add/Edit Form ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media(max-width:600px){ .form-grid { grid-template-columns: 1fr; } }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1/-1; }
+
+label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+input, select, textarea {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--bg);
+  transition: border-color 0.2s;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #d4522f; transform: translateY(-1px); }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: #27ae60; }
+.btn-danger { background: var(--red); color: #fff; }
+
+/* ── Voice Recorder ── */
+.recorder-card {
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.recorder-card.recording { border-color: var(--red); background: #fff5f5; }
+
+.record-btn {
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  box-shadow: 0 4px 16px rgba(232,97,60,0.35);
+}
+.record-btn:hover { transform: scale(1.05); }
+.record-btn.recording {
+  background: var(--red);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(232,75,60,0.4); }
+  50%      { box-shadow: 0 0 0 14px rgba(232,75,60,0); }
+}
+
+.record-timer {
+  font-size: 1.5rem;
+  font-family: 'DM Serif Display', serif;
+  color: var(--red);
+  min-height: 36px;
+}
+
+.voice-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.voice-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voice-item audio { flex: 1; height: 32px; }
+.voice-item .voice-name { font-size: 0.82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+
+/* ── Settings ── */
+.settings-section { margin-bottom: 24px; }
+.settings-section h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+.toggle-label { font-size: 0.9rem; }
+.toggle-desc  { font-size: 0.78rem; color: var(--muted); }
+
+.toggle {
+  position: relative;
+  width: 46px; height: 24px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle input:checked + .toggle-slider { background: var(--green); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--text);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 9999;
+  max-width: 300px;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 28px;
+  width: 90%;
+  max-width: 480px;
+  transform: scale(0.95);
+  transition: transform 0.2s;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-overlay.open .modal { transform: scale(1); }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+}
+.modal-close:hover { background: var(--border); }
+
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ── Empty state ── */
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* ── Schedule overview ── */
+.schedule-time-group { margin-bottom: 20px; }
+.schedule-time-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">💊 Med<span>Remind</span></div>
+  <div class="bot-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Bot inactive</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('medicines')">💊 Medicines</button>
+    <button class="tab" onclick="switchTab('voices')">🎙️ Voice</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- ── MEDICINES TAB ── -->
+  <div id="tab-medicines" class="tab-content active">
+
+    <div class="card">
+      <div class="card-title">
+        📋 Medicine Schedule
+        <button class="btn btn-primary" style="margin-left:auto;font-size:0.8rem;padding:8px 16px" onclick="openAddModal()">+ Add Medicine</button>
+      </div>
+      <div class="medicine-grid" id="medicineList">
+        <div class="empty"><div class="empty-icon">💊</div><p>Loading...</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── VOICES TAB ── -->
+  <div id="tab-voices" class="tab-content">
+
+    <div class="card">
+      <div class="card-title">🎙️ Record New Voice</div>
+
+      <div class="recorder-card" id="recorderCard">
+        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤</button>
+        <div class="record-timer" id="recordTimer"></div>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px">Click the mic to start recording</p>
+
+        <div class="form-group" style="max-width:280px;margin:0 auto 16px">
+          <label>Recording Label</label>
+          <input type="text" id="voiceLabel" placeholder="e.g. morning, night..." value="morning">
+        </div>
+
+        <div id="recordingPreview" style="display:none;margin-top:14px">
+          <audio id="previewAudio" controls style="width:100%;margin-bottom:12px"></audio>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button class="btn btn-success" onclick="saveRecording()">💾 Save Recording</button>
+            <button class="btn btn-secondary" onclick="discardRecording()">✕ Discard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📁 Saved Recordings</div>
+      <div id="voiceList">
+        <div class="empty"><div class="empty-icon">🎵</div><p>No recordings yet</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SETTINGS TAB ── -->
+  <div id="tab-settings" class="tab-content">
+
+    <div class="card">
+      <div class="settings-section">
+        <h3>🤖 Telegram Bot</h3>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Bot Token</label>
+            <input type="password" id="botToken" placeholder="Get from @BotFather on Telegram">
+          </div>
+          <div class="form-group full">
+            <label>Dad's Chat ID</label>
+            <input type="text" id="chatId" placeholder="e.g. 123456789">
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>🔔 Bot Status</h3>
+        <div class="toggle-wrap">
+          <div>
+            <div class="toggle-label">Enable Reminders</div>
+            <div class="toggle-desc">Bot will send messages at scheduled times</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="botActive" onchange="saveSettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+        <button class="btn btn-secondary" onclick="testBot()">📨 Send Test Message</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ℹ️ How to Setup</div>
+      <div style="font-size:0.85rem;line-height:1.8;color:var(--muted)">
+        <p><b style="color:var(--text)">Step 1</b> — Open Telegram → search <b>@BotFather</b> → send <code>/newbot</code></p>
+        <p><b style="color:var(--text)">Step 2</b> — Follow prompts → copy the <b>Bot Token</b> → paste above</p>
+        <p><b style="color:var(--text)">Step 3</b> — Tell Dad to open Telegram → search your bot → send "Hi"</p>
+        <p><b style="color:var(--text)">Step 4</b> — Open: <code>https://api.telegram.org/bot<i>YOUR_TOKEN</i>/getUpdates</code></p>
+        <p><b style="color:var(--text)">Step 5</b> — Find <code>"chat":{"id": 123456}</code> → that's the <b>Chat ID</b></p>
+        <p><b style="color:var(--text)">Step 6</b> — Paste Chat ID above → Save → Test → Enable reminders ✅</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── ADD/EDIT MODAL ── -->
+<div class="modal-overlay" id="medModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add Medicine</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Tablet / Medicine Name</label>
+        <input type="text" id="mName" placeholder="e.g. Metformin">
+      </div>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="text" id="mQuantity" placeholder="e.g. 1 tablet">
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="time" id="mTime" value="08:00">
+      </div>
+      <div class="form-group full">
+        <label>Instruction / Note</label>
+        <input type="text" id="mNote" placeholder="e.g. Take after breakfast">
+      </div>
+      <div class="form-group full">
+        <label>Voice Recording (optional)</label>
+        <select id="mVoice">
+          <option value="">— No voice —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMedicine()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let medicines  = [];
+let voices     = [];
+let editingId  = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordTimer = null;
+let recordSeconds = 0;
+let recordedBlob = null;
+
+// ── Toast ──────────────────────────────────────────────────
+function toast(msg, type="") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "show " + type;
+  setTimeout(() => el.className = "", 3000);
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(el => el.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  event.target.classList.add("active");
+  if (tab === "voices") loadVoices();
+}
+
+// ── API ───────────────────────────────────────────────────
+async function api(path, method="GET", body=null) {
+  const opts = { method, headers: {} };
+  if (body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  const r = await fetch("/api" + path, opts);
+  return r.json();
+}
+
+// ── Medicines ─────────────────────────────────────────────
+async function loadMedicines() {
+  medicines = await api("/medicines");
+  renderMedicines();
+}
+
+function renderMedicines() {
+  const list = document.getElementById("medicineList");
+  if (!medicines.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">💊</div><p>No medicines yet. Click + Add Medicine!</p></div>`;
+    return;
+  }
+
+  // Group by time
+  const grouped = {};
+  medicines.forEach(m => {
+    if (!grouped[m.time]) grouped[m.time] = [];
+    grouped[m.time].push(m);
+  });
+
+  const times = Object.keys(grouped).sort();
+  list.innerHTML = times.map(t => `
+    <div class="schedule-time-group">
+      <div class="schedule-time-label">🕐 ${formatTime(t)}</div>
+      ${grouped[t].map(m => `
+        <div class="med-item">
+          <div class="med-time">${t}</div>
+          <div class="med-info">
+            <div class="med-name">${m.name}</div>
+            <div class="med-detail">${m.quantity} &nbsp;·&nbsp; ${m.note}</div>
+          </div>
+          <div class="med-voice">
+            <span class="voice-badge ${m.voice ? '' : 'none'}">${m.voice ? '🔊 ' + m.voice.split('_')[0] : '🔇 No voice'}</span>
+          </div>
+          <div class="med-actions">
+            <button class="btn-icon btn-edit" onclick="openEditModal('${m.id}')" title="Edit">✏️</button>
+            <button class="btn-icon btn-delete" onclick="deleteMedicine('${m.id}')" title="Delete">🗑️</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+
+function formatTime(t) {
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12  = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+async function deleteMedicine(id) {
+  if (!confirm("Delete this medicine?")) return;
+  await api("/medicines/" + id, "DELETE");
+  toast("Deleted ✓");
+  loadMedicines();
+}
+
+// ── Modal ─────────────────────────────────────────────────
+async function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Add Medicine";
+  document.getElementById("mName").value     = "";
+  document.getElementById("mQuantity").value = "1 tablet";
+  document.getElementById("mTime").value     = "08:00";
+  document.getElementById("mNote").value     = "";
+  await populateVoiceSelect("");
+  document.getElementById("medModal").classList.add("open");
+}
+
+async function openEditModal(id) {
+  editingId = id;
+  const m = medicines.find(x => x.id === id);
+  document.getElementById("modalTitle").textContent = "Edit Medicine";
+  document.getElementById("mName").value     = m.name;
+  document.getElementById("mQuantity").value = m.quantity;
+  document.getElementById("mTime").value     = m.time;
+  document.getElementById("mNote").value     = m.note;
+  await populateVoiceSelect(m.voice);
+  document.getElementById("medModal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("medModal").classList.remove("open");
+}
+
+async function populateVoiceSelect(current) {
+  const sel = document.getElementById("mVoice");
+  voices = await api("/voice/list");
+  sel.innerHTML = `<option value="">— No voice —</option>` +
+    voices.map(v => `<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("");
+}
+
+async function saveMedicine() {
+  const data = {
+    name:     document.getElementById("mName").value.trim(),
+    quantity: document.getElementById("mQuantity").value.trim(),
+    time:     document.getElementById("mTime").value,
+    note:     document.getElementById("mNote").value.trim(),
+    voice:    document.getElementById("mVoice").value,
+  };
+  if (!data.name) { toast("Please enter a medicine name", "error"); return; }
+
+  if (editingId) {
+    await api("/medicines/" + editingId, "PUT", data);
+    toast("Updated ✓", "success");
+  } else {
+    await api("/medicines", "POST", data);
+    toast("Added ✓", "success");
+  }
+  closeModal();
+  loadMedicines();
+}
+
+// ── Voice Recorder ────────────────────────────────────────
+async function toggleRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(recordedChunks, { type: "audio/ogg; codecs=opus" });
+      const url = URL.createObjectURL(recordedBlob);
+      document.getElementById("previewAudio").src = url;
+      document.getElementById("recordingPreview").style.display = "block";
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+
+    // UI
+    document.getElementById("recordBtn").classList.add("recording");
+    document.getElementById("recordBtn").textContent = "⏹";
+    document.getElementById("recorderCard").classList.add("recording");
+    recordSeconds = 0;
+    document.getElementById("recordTimer").textContent = "0:00";
+    recordTimer = setInterval(() => {
+      recordSeconds++;
+      const m = Math.floor(recordSeconds/60);
+      const s = String(recordSeconds%60).padStart(2,"0");
+      document.getElementById("recordTimer").textContent = `${m}:${s}`;
+    }, 1000);
+  } catch(e) {
+    toast("Microphone access denied", "error");
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder) mediaRecorder.stop();
+  clearInterval(recordTimer);
+  document.getElementById("recordBtn").classList.remove("recording");
+  document.getElementById("recordBtn").textContent = "🎤";
+  document.getElementById("recorderCard").classList.remove("recording");
+  document.getElementById("recordTimer").textContent = "";
+}
+
+async function saveRecording() {
+  if (!recordedBlob) return;
+  const label = document.getElementById("voiceLabel").value.trim() || "recording";
+  const fd = new FormData();
+  fd.append("voice", recordedBlob, label + ".ogg");
+  fd.append("label", label);
+  const r = await fetch("/api/voice/upload", { method: "POST", body: fd });
+  const data = await r.json();
+  toast("Voice saved: " + data.filename, "success");
+  discardRecording();
+  loadVoices();
+}
+
+function discardRecording() {
+  recordedBlob = null;
+  document.getElementById("recordingPreview").style.display = "none";
+  document.getElementById("previewAudio").src = "";
+}
+
+async function loadVoices() {
+  voices = await api("/voice/list");
+  const list = document.getElementById("voiceList");
+  if (!voices.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🎵</div><p>No recordings yet. Record one above!</p></div>`;
+    return;
+  }
+  list.innerHTML = `<div class="voice-list">` + voices.map(v => `
+    <div class="voice-item">
+      <span class="voice-name">🎵 ${v}</span>
+      <audio controls src="/api/voice/${v}"></audio>
+      <button class="btn-icon btn-delete" onclick="deleteVoice('${v}')" title="Delete">🗑️</button>
+    </div>
+  `).join("") + `</div>`;
+}
+
+async function deleteVoice(filename) {
+  if (!confirm("Delete this recording?")) return;
+  await api("/voice/" + filename, "DELETE");
+  toast("Recording deleted");
+  loadVoices();
+}
+
+// ── Settings ──────────────────────────────────────────────
+async function loadSettings() {
+  const s = await api("/settings");
+  if (s.bot_token_set) document.getElementById("botToken").placeholder = "Token already saved (enter new to change)";
+  document.getElementById("chatId").value    = s.chat_id || "";
+  document.getElementById("botActive").checked = s.bot_active || false;
+  updateStatusDot(s.bot_active);
+}
+
+function updateStatusDot(active) {
+  document.getElementById("statusDot").className = "status-dot" + (active ? " active" : "");
+  document.getElementById("statusText").textContent = active ? "Bot active" : "Bot inactive";
+}
+
+async function saveSettings() {
+  const data = {
+    bot_token:  document.getElementById("botToken").value,
+    chat_id:    document.getElementById("chatId").value.trim(),
+    bot_active: document.getElementById("botActive").checked,
+  };
+  await api("/settings", "POST", data);
+  toast("Settings saved ✓", "success");
+  updateStatusDot(data.bot_active);
+}
+
+async function testBot() {
+
+  toast("Sending test message...");
+  const r = await api("/test", "POST");
+
+  if (r.ok) toast("Test message sent! Check Telegram 📱", "success");
+  else toast("Failed: " + (r.error || "Check token & chat ID"), "error");
+}
+
+// ── Init ──────────────────────────────────────────────────
+loadMedicines();
+loadSettings();
+</script>
+</body>
+</html>
