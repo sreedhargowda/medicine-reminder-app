@@ -6,6 +6,7 @@ import schedule
 import time
 import requests as req
 from datetime import datetime
+app = Flask(__name__)
 
 app = Flask(__name__, static_folder="static")
 
@@ -283,12 +284,23 @@ def api_test():
     return jsonify({"ok": ok})
 
 # ── Start ──────────────────────────────────────────────────
+# if __name__ == "__main__":
+#     print("=" * 50)
+#     print("  💊 Medicine Reminder Web App")
+#     print("  Open: http://localhost:5000")
+#     print("=" * 50)
+#     rebuild_schedule()
+#     start_scheduler_thread()
+#     # app.run(debug=False, port=5000)
+#     app.run(host="0.0.0.0", port=10000)
+
+rebuild_schedule()
+start_scheduler_thread()
+
 if __name__ == "__main__":
     print("=" * 50)
     print("  💊 Medicine Reminder Web App")
     print("  Open: http://localhost:5000")
     print("=" * 50)
-    rebuild_schedule()
-    start_scheduler_thread()
-    # app.run(debug=False, port=5000)
-    app.run(host="0.0.0.0", port=10000)
+
+    app.run(debug=True)
