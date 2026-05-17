@@ -29,8 +29,8 @@ DEFAULT_MEDICINES = [
 
 
 DEFAULT_SETTINGS = {
-    "bot_token": "8340562347:AAGI60xIhflvaJ8N8OKFfJr7kJZ-uVFAllc",
-    "chat_id": "1528050849",
+    "bot_token": "",
+    "chat_id": "",
     "bot_active": True
 }
 
